@@ -28,3 +28,9 @@ or
 ``` shell
 python maintenance.get.py --all
 ```
+
+## item.get
+
+Examples:
+  
+1. Get last time for zabbix agent ping
