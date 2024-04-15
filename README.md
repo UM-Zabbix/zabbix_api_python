@@ -34,3 +34,9 @@ python maintenance.get.py --all
 Examples:
   
 1. Get last time for zabbix agent ping
+
+
+## add-hostgroup.py
+
+- Script adds hosts to hostgroups based on csv input
+- Give a csv containing hostnames and whether prod or non-prod
