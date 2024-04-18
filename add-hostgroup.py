@@ -5,6 +5,28 @@ import urllib3
 from api import *
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+# Description:
+# This script take a csv file that contains a list of hosts and their environment, prod or non-prod
+# The script will output a log file of hosts that do not already exist in Zabbix
+
+# Usage:
+# python add-hostgroup.py <csv_file> <usergroup> (--dry-run) (--force)
+
+# Arguments:
+# the --dry-run flag will not add the hosts to the hostgroup but will print out the number of hosts that will be added and to which hostgroups
+# the --force flag will not prompt the user to continue adding hosts to the hostgroup
+
+# Configuration:
+# the csv file column headers can be changed here
+HOST_HEADER = "HOST"
+ENVIRONMENT_HEADER = "STATUS"
+# the prod and non-prod descriptor can be changed here
+PROD_DESCRIPTOR = "PRODUCTION"
+NON_PROD_DESCRIPTOR = "NON-PRODUCTION"
+# the host domain can be changed here, leave empty if domain is specified in the csv file
+DOMAIN = ".adsroot.itcs.umich.edu"
+
+# get the hostid by hostname
 def get_host_by_name(hostname):
     payload = {
         "jsonrpc": "2.0",
@@ -29,6 +51,7 @@ def get_host_by_name(hostname):
 
     return hostid
 
+# get all usergroups
 def get_usergroups():
     payload = {
         "jsonrpc": "2.0",
@@ -44,6 +67,7 @@ def get_usergroups():
     data = api_request(payload)
     return data['result']
 
+# get usergroup by name
 def get_usergroup_by_name(name):
     usergroups = get_usergroups()
     for group in usergroups:
@@ -51,6 +75,7 @@ def get_usergroup_by_name(name):
             return group
     return None
 
+# get hostgroup by the group id
 def get_hostgroups_by_id(id):
     payload = {
         "jsonrpc": "2.0",
@@ -66,13 +91,8 @@ def get_hostgroups_by_id(id):
     data = api_request(payload)
     return data['result']
 
-def main():
-    # constants
-    HOST_HEADER = "HOST"
-    ENVIRONMENT_HEADER = "STATUS"
-    PROD_DESCRIPTOR = "PRODUCTION"
-    NON_PROD_DESCRIPTOR = "NON-PRODUCTION"
 
+def main():
     # read arguments to get the csv file
     if len(sys.argv) < 2:
         print("Usage: python add-hostgroup.py <csv_file> <usergroup> (--dry-run) (--force)")
@@ -80,6 +100,8 @@ def main():
 
     csv_file = sys.argv[1]
     usergroup = sys.argv[2]
+
+    # check for dry-run flag
     try:
         dry_run = sys.argv[3]
         if dry_run != "--dry-run":
@@ -88,6 +110,7 @@ def main():
     except:
         dry_run = None
 
+    # check for force flag
     try:
         force = sys.argv[4]
         if force != "--force":
@@ -113,7 +136,7 @@ def main():
     else:
         print(f"> Usergroup {usergroup} exists")
     
-    # get ids with permission of 3
+    # get ids with permission of 3, read-write
     hostgroup_rights = []
     for right in usergroup_data['hostgroup_rights']:
         if right['permission'] == '3':
@@ -141,6 +164,7 @@ def main():
             print(f"Hostgroup {group[0]['name']} does not match Prod or NonProd!")
             sys.exit(1)
 
+    # check to see if prod and non-prod hostgroups exist
     if prod == 0 or non_prod == 0:
         print("Prod or Non-Prod hostgroup not found!")
         sys.exit(1)
@@ -148,7 +172,7 @@ def main():
     print(f"Prod Hostgroup: {prod}")
     print(f"Non-Prod Hostgroup: {non_prod}")
 
-    # open the csv file and read the column titled 'host'
+    # open the csv file and read in the hosts and environment
     hosts = []
     environment = []
     with open(csv_file, 'r') as file:
@@ -175,7 +199,7 @@ def main():
     for host in hosts:
         # make host lower case
         host = host.lower()
-        hostid = get_host_by_name(host + ".adsroot.itcs.umich.edu")
+        hostid = get_host_by_name(host + DOMAIN)
         if hostid is None:
             print(f"Host {host} does not exist")
             in_zabbix.append(None)
@@ -187,6 +211,7 @@ def main():
             print(f"Host {host} exists")
             in_zabbix.append(hostid)
     
+    # separate hosts into prod and non-prod
     index = 0
     prod_hosts = []
     non_prod_hosts = []
@@ -214,6 +239,7 @@ def main():
     # print("Non-Prod Hosts")
     # print(non_prod_hosts)
 
+    # print summary
     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     # print len of hosts from file
     print(f"Number of hosts read from CSV:          {len(hosts)}")
@@ -239,6 +265,7 @@ def main():
         print("Dry run, Exiting...")
         sys.exit(1)
 
+    # if force is not set, ask user if they want to continue
     if force is None:
         # ask user if they want to continue
         answer = input("Do you want to continue adding hosts to hostgroup? (y/n): ")
