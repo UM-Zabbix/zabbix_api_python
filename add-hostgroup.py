@@ -6,7 +6,8 @@ from api import *
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Description:
-# This script take a csv file that contains a list of hosts and their environment, prod or non-prod
+# This script take a csv file that contains a list of hosts and their environment, prod or non-prod, and adds them to the appropriate hostgroup in Zabbix based on the usergroup provided
+
 # The script will output a log file of hosts that do not already exist in Zabbix
 
 # Usage:
