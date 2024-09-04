@@ -37,6 +37,9 @@ Examples:
 
 
 ## add-hostgroup.py
-
 - Script adds hosts to hostgroups based on csv input
 - Give a csv containing hostnames and whether prod or non-prod
+
+## create-hosts.py
+- Script creates new hosts in Zabbix that are monitored by a proxy group
+- Hosts to add and hostgroup to add them to are defined in the python file
