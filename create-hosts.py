@@ -47,21 +47,24 @@ def get_proxygroups():
 
 def create_host(name, proxy_groupid, groupid):
     payload = {
-    "jsonrpc": "2.0",
-    "method": "host.create",
-    "params": {
-        "host": name,
-        "groups": [
-            {
-                "groupid": groupid
-            }
-        ],
-        "monitored_by": 2,
-        "proxy_groupid": proxy_groupid,
-    },
-    "auth": ZABBIX_API_token,
-    "id": 1
-}
+        "jsonrpc": "2.0",
+        "method": "host.create",
+        "params": {
+            "host": name,
+            "groups": [
+                {
+                    "groupid": groupid
+                }
+            ],
+            "monitored_by": 2,
+            "proxy_groupid": proxy_groupid,
+        },
+        "auth": ZABBIX_API_token,
+        "id": 1
+    }
+
+    data = api_request(payload)
+    return data
 
 def main():
     proxygroups = get_proxygroups()
@@ -75,7 +78,8 @@ def main():
     print("Host Group ID: " + str(hostgroup_id))
     
     for host in hosts:
-        create_host(host, proxy_groupid, hostgroup_id)
+        result = create_host(host, proxy_groupid, hostgroup_id)
+        print(result)
         print("Creating host: " + host)
         print("Proxy Group ID: " + str(proxy_groupid))
         print("Host Group ID: " + str(hostgroup_id))
