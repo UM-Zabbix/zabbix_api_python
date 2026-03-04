@@ -3,3 +3,5 @@ __pycache__
 *.csv
 *.log
 /nagios
+/csv
+.DS_Store
